@@ -60,3 +60,5 @@ CREATE TABLE detalle_recetas (
     duracion VARCHAR(50) NOT NULL,
     CONSTRAINT unique_receta_item UNIQUE (id_receta, num_item)
 );
+
+--Bryan Hernandez Flores
