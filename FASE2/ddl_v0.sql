@@ -62,3 +62,5 @@ CREATE TABLE detalle_recetas (
 );
 
 --Bryan Hernandez Flores
+--Deberiamos regresar a las viejas costumbres de los campos de concentracion Brenda Sofia Cabrera Leon--
+-- VIva dios Alessandro PedrozA Martinez--
