@@ -42,3 +42,28 @@ SELECT
 FROM pacientes
 GROUP BY 1
 ORDER BY 1;
+
+--Consulta c2 clave C3 Bryan
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT 
+    id_cita,
+    id_paciente,
+    id_medico,
+    fecha_hora,
+    estado
+FROM citas
+WHERE lower(estado) = 'completada'
+  AND fecha_hora >= '2026-01-01 00:00:00' 
+  AND fecha_hora < '2026-07-01 00:00:00'
+ORDER BY fecha_hora;
+
+--Fracción de filas que cumple la condición:
+SELECT round(
+    count(*) FILTER (
+        WHERE lower(estado) = 'completada' 
+          AND fecha_hora >= '2026-01-01 00:00:00' 
+          AND fecha_hora < '2026-07-01 00:00:00'
+    )::numeric / count(*), 
+    4
+) AS fraccion
+FROM citas;
