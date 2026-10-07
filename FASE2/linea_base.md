@@ -23,3 +23,22 @@ SELECT
 FROM citas
 GROUP BY 1
 ORDER BY 1;
+
+
+--Consulta3 by sofus--
+ANALYZE pacientes;
+
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT 
+    date_trunc('month', fecha_registro) AS mes,
+    count(*) AS total_pacientes,
+    count(*) FILTER (WHERE lower(genero) = 'masculino') AS total_hombres,
+    count(*) FILTER (WHERE lower(genero) = 'femenino') AS total_mujeres,
+    round(
+        (count(*) FILTER (WHERE lower(genero) = 'femenino')::numeric / count(*)::numeric) * 100, 
+        2
+    ) AS porcentaje_mujeres
+FROM pacientes
+GROUP BY 1
+ORDER BY 1;
