@@ -1,5 +1,6 @@
 Consulta Execution Time (ms), tiempo de en medio ¿Aparece Seq Scan? ¿Sobre qué tabla? Qué columna creen que convendría indexar y por qué C7: Tendencia mensual de citas (citas con date_trunc y conteo) (Ejemplo típico en 10k filas: 12.4 ms — anota el tuyo) Sí, aparece Seq Scan on citas. Convendría indexar la columna fecha_hora (o una expresión indexada date_trunc('month', fecha_hora)), porque la consulta realiza un escaneo secuencial completo de toda la tabla para agrupar y ordenar cronológicamente las 10 000 filas. C8: Citas completadas por médico y mes (citas + medicos) (Ejemplo típico en 10k filas: 18.7 ms — anota el tuyo) Sí, aparece Seq Scan on citas (y posiblemente Seq Scan on medicos). Convendría indexar la columna estado (o un índice compuesto (estado, fecha_hora)), ya que el motor tiene que leer todas las filas de la tabla para aplicar el filtro WHERE lower(estado) = 'completada' antes de realizar el agrupamiento.
 
+--Consulta7 by aless--
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     date_trunc('month', fecha_hora) AS mes,
