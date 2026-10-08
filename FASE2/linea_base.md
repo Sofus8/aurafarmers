@@ -75,3 +75,11 @@ FROM citas;
 | `idx_citas_estado_fecha` | C3 | Sort + Seq Scan · shared hit=5 · 0.144 ms | Sort + Seq Scan · shared hit=5 · 0.198 ms | **Se queda** (optimizado para volumen de 10k+ filas) |
 | `citas_completadas_idx` | C3 | Seq Scan · shared hit=4 · 0.154 ms | - | **Borrado** (redundante con `idx_citas_estado_fecha`) |
 | `citas_fecha_hora_idx` | C3 | Seq Scan · shared hit=4 · 0.154 ms | - | **Borrado** (redundante con `idx_citas_estado_fecha`) |
+
+| Índice | Consulta | Antes | Después | Veredicto |
+|---|---|---|---|---|
+| `citas_fecha_hora_idx` | Parte 3.1 | 156 hit · 0.020 ms | 170 hit · 0.011 ms | Se conserva porque la condición reescrita tuvo menor tiempo de ejecución |
+
+| Índice | Consulta | Antes | Después | Veredicto |
+|---|---|---|---|---|
+| `citas_id_paciente_idx` | C2 | 148 buffers hit 17.800ms | 160 buffers hit 13.403ms | Se conserva porque mejoró el rendimiento de la consulta |
