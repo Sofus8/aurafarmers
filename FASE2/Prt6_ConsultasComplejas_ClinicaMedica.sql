@@ -103,3 +103,16 @@ ORDER BY mes, lugar;
 
 
 --Hola, hubo una confusion al haber creado el repositorio, pero ya está corregido y listo tanto en el perfil de bray como el mío
+--08 de Octubre de 2026
+-- C3 reescrita · autor: BrayFlo
+SELECT 
+    id_cita,
+    id_paciente,
+    id_medico,
+    fecha_hora,
+    estado
+FROM citas
+WHERE estado = 'Completada'
+  AND fecha_hora >= '2026-01-01 00:00:00' 
+  AND fecha_hora < '2026-07-01 00:00:00'
+ORDER BY fecha_hora DESC;
