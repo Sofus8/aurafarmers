@@ -17,3 +17,12 @@ FROM pacientes
 WHERE lower(genero) = 'femenino'
 ORDER BY fecha_registro DESC
 LIMIT 10;
+
+
+-- C2 · autor: Dogbware · FK sin índice; se utiliza en el LEFT JOIN
+CREATE INDEX citas_id_paciente_idx
+ON citas (id_paciente);
+
+-- Parte 3.1 · autor: Dogbware · fecha_hora se utiliza para filtrar por rangos de fechas
+CREATE INDEX citas_fecha_hora_idx
+ON citas (fecha_hora);
