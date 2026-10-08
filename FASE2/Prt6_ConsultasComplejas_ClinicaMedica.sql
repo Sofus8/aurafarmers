@@ -116,3 +116,11 @@ WHERE estado = 'Completada'
   AND fecha_hora >= '2026-01-01 00:00:00' 
   AND fecha_hora < '2026-07-01 00:00:00'
 ORDER BY fecha_hora DESC;
+
+-- Parte 3.1 · autor: Dogbware
+-- Reescritura de filtro por mes para evitar aplicar una función sobre fecha_hora
+
+SELECT *
+FROM citas
+WHERE fecha_hora >= '2026-10-01'
+  AND fecha_hora < '2026-11-01';
