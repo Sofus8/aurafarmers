@@ -67,3 +67,11 @@ SELECT round(
     4
 ) AS fraccion
 FROM citas;
+
+## Resultados 8 oct
+
+| Índice | Consulta | Antes (nodo · Buffers · ms) | Después (nodo · Buffers · ms) | Veredicto |
+| :--- | :--- | :--- | :--- | :--- |
+| `idx_citas_estado_fecha` | C3 | Sort + Seq Scan · shared hit=5 · 0.144 ms | Sort + Seq Scan · shared hit=5 · 0.198 ms | **Se queda** (optimizado para volumen de 10k+ filas) |
+| `citas_completadas_idx` | C3 | Seq Scan · shared hit=4 · 0.154 ms | - | **Borrado** (redundante con `idx_citas_estado_fecha`) |
+| `citas_fecha_hora_idx` | C3 | Seq Scan · shared hit=4 · 0.154 ms | - | **Borrado** (redundante con `idx_citas_estado_fecha`) |
