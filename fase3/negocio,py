@@ -1,0 +1,222 @@
+
+import sqlite3
+import xml.etree.ElementTree as ET
+
+from fastapi import FastAPI, HTTPException, Response
+from pydantic import BaseModel
+
+app = FastAPI(title="API de mi negocio")
+
+BD = "negocio.db"
+
+
+def conectar():
+    conexion = sqlite3.connect(BD)
+    conexion.row_factory = sqlite3.Row
+    return conexion
+
+
+def preparar_bd():
+    conexion = conectar()
+
+    conexion.execute("""
+        CREATE TABLE IF NOT EXISTS detalle_recetas (
+            id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
+            num_item INTEGER NOT NULL,
+            medicamento TEXT NOT NULL,
+            dosis TEXT NOT NULL,
+            frecuencia TEXT NOT NULL
+        )
+    """)
+
+    total = conexion.execute(
+        "SELECT COUNT(*) FROM detalle_recetas"
+    ).fetchone()[0]
+
+    if total == 0:
+        conexion.executemany(
+            """
+            INSERT INTO detalle_recetas
+            (num_item, medicamento, dosis, frecuencia)
+            VALUES (?, ?, ?, ?)
+            """,
+            [
+                (1, "Paracetamol", "500 mg", "Cada 8 horas"),
+                (2, "Ibuprofeno", "400 mg", "Cada 12 horas"),
+                (3, "Amoxicilina", "500 mg", "Cada 8 horas"),
+            ],
+        )
+
+    conexion.commit()
+    conexion.close()
+
+
+preparar_bd()
+
+
+# Modelo de datos para crear o actualizar registros
+class DatosDetalleRecetas(BaseModel):
+    num_item: int
+    medicamento: str
+    dosis: str
+    frecuencia: str
+
+
+@app.get("/")
+def inicio():
+    return {"mensaje": "La API de mi negocio funciona"}
+
+
+# R de CRUD: leer todos
+@app.get("/detalle_recetas")
+def listar_detalle_recetas():
+    conexion = conectar()
+
+    filas = conexion.execute(
+        """
+        SELECT id_detalle, num_item, medicamento, dosis, frecuencia
+        FROM detalle_recetas
+        """
+    ).fetchall()
+
+    conexion.close()
+    return [dict(fila) for fila in filas]
+
+
+# R de CRUD: leer uno
+@app.get("/detalle_recetas/{detalle_recetas_id}")
+def obtener_detalle_receta(detalle_recetas_id: int):
+    conexion = conectar()
+
+    fila = conexion.execute(
+        """
+        SELECT id_detalle, num_item, medicamento, dosis, frecuencia
+        FROM detalle_recetas
+        WHERE id_detalle = ?
+        """,
+        (detalle_recetas_id,),
+    ).fetchone()
+
+    conexion.close()
+
+    if fila is None:
+        raise HTTPException(status_code=404, detail="No encontrado")
+
+    return dict(fila)
+
+
+# C de CRUD: crear
+@app.post("/detalle_recetas", status_code=201)
+def crear_detalle_receta(datos: DatosDetalleRecetas):
+    conexion = conectar()
+
+    cursor = conexion.execute(
+        """
+        INSERT INTO detalle_recetas
+        (num_item, medicamento, dosis, frecuencia)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            datos.num_item,
+            datos.medicamento,
+            datos.dosis,
+            datos.frecuencia,
+        ),
+    )
+
+    conexion.commit()
+    nuevo_id = cursor.lastrowid
+    conexion.close()
+
+    return {
+        "id_detalle": nuevo_id,
+        **datos.model_dump(),
+    }
+
+
+# U de CRUD: actualizar
+@app.put("/detalle_recetas/{detalle_recetas_id}")
+def actualizar_detalle_receta(
+    detalle_recetas_id: int,
+    datos: DatosDetalleRecetas,
+):
+    conexion = conectar()
+
+    cursor = conexion.execute(
+        """
+        UPDATE detalle_recetas
+        SET num_item = ?, medicamento = ?, dosis = ?, frecuencia = ?
+        WHERE id_detalle = ?
+        """,
+        (
+            datos.num_item,
+            datos.medicamento,
+            datos.dosis,
+            datos.frecuencia,
+            detalle_recetas_id,
+        ),
+    )
+
+    conexion.commit()
+    cambiadas = cursor.rowcount
+    conexion.close()
+
+    if cambiadas == 0:
+        raise HTTPException(status_code=404, detail="No encontrado")
+
+    return {
+        "id_detalle": detalle_recetas_id,
+        **datos.model_dump(),
+    }
+
+
+# D de CRUD: eliminar
+@app.delete("/detalle_recetas/{detalle_recetas_id}")
+def eliminar_detalle_receta(detalle_recetas_id: int):
+    conexion = conectar()
+
+    cursor = conexion.execute(
+        "DELETE FROM detalle_recetas WHERE id_detalle = ?",
+        (detalle_recetas_id,),
+    )
+
+    conexion.commit()
+    borradas = cursor.rowcount
+    conexion.close()
+
+    if borradas == 0:
+        raise HTTPException(status_code=404, detail="No encontrado")
+
+    return {
+        "mensaje": f"Registro {detalle_recetas_id} eliminado"
+    }
+
+
+# Reto: consultar la misma lista en XML
+@app.get("/detalle_recetas-xml")
+def listar_detalle_recetas_xml():
+    conexion = conectar()
+
+    filas = conexion.execute(
+        "SELECT * FROM detalle_recetas"
+    ).fetchall()
+
+    conexion.close()
+
+    raiz = ET.Element("detalle_recetas")
+
+    for fila in filas:
+        registro = ET.SubElement(raiz, "medicamento")
+
+        for columna in fila.keys():
+            ET.SubElement(registro, columna).text = str(fila[columna])
+
+    xml_texto = ET.tostring(
+        raiz,
+        encoding="unicode",
+    )
+
+    return Response(
+        content=xml_texto,
+        media_type="application/xml",
+    )
